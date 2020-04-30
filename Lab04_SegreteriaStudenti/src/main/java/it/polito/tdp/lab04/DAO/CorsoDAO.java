@@ -33,11 +33,8 @@ public class CorsoDAO {
 				int numeroCrediti = rs.getInt("crediti");
 				String nome = rs.getString("nome");
 				int periodoDidattico = rs.getInt("pd");
-
-				System.out.println(codins + " " + numeroCrediti + " " + nome + " " + periodoDidattico);
-
-				// Crea un nuovo JAVA Bean Corso
-				// Aggiungi il nuovo oggetto Corso alla lista corsi
+				
+				corsi.add(new Corso(codins,numeroCrediti, nome, periodoDidattico));
 			}
 
 			conn.close();
@@ -53,12 +50,62 @@ public class CorsoDAO {
 	
 	
 	/*
-	 * Dato un codice insegnamento, ottengo il corso
+	 * Dato un nome insegnamento, ottengo il corso
 	 */
-	public void getCorso(Corso corso) {
-		// TODO
+	public Corso getCorso(String nomeCorso) {
+         final String sql = "SELECT * FROM corso WHERE nome = ? ";
+	     Corso corso= null;
+        try {
+        	Connection conn = ConnectDB.getConnection();
+        	PreparedStatement ps = conn.prepareStatement(sql);
+        	
+        	ps.setString(1, nomeCorso);
+        	
+        	ResultSet rs = ps.executeQuery();
+            while(rs.next()) {
+        	corso = new Corso(rs.getString("codins"),
+                	rs.getInt("crediti"),
+                	rs.getString("nome"),
+                	rs.getInt("pd"));
+        	
+        	conn.close();
+            }
+        	
+            
+        } catch (SQLException e) {
+        	e.printStackTrace();
+        	throw new RuntimeException("Errore Db");
+        }
+        
+	    return corso;
 	}
-
+	public Corso getCorsoDaCodins(String codins) {
+        final String sql = "SELECT * FROM corso WHERE codins = ? ";
+	     Corso corso= null;
+       try {
+       	Connection conn = ConnectDB.getConnection();
+       	PreparedStatement ps = conn.prepareStatement(sql);
+       	
+       	ps.setString(1, codins);
+       	
+       	ResultSet rs = ps.executeQuery();
+           while(rs.next()) {
+       	corso = new Corso(rs.getString("codins"),
+               	rs.getInt("crediti"),
+               	rs.getString("nome"),
+               	rs.getInt("pd"));
+       	
+       	conn.close();
+           }
+       	
+           
+       } catch (SQLException e) {
+       	e.printStackTrace();
+       	throw new RuntimeException("Errore Db");
+       }
+       
+	    return corso;
+	}
 	/*
 	 * Ottengo tutti gli studenti iscritti al Corso
 	 */
@@ -69,10 +116,29 @@ public class CorsoDAO {
 	/*
 	 * Data una matricola ed il codice insegnamento, iscrivi lo studente al corso.
 	 */
-	public boolean inscriviStudenteACorso(Studente studente, Corso corso) {
-		// TODO
-		// ritorna true se l'iscrizione e' avvenuta con successo
-		return false;
+	public boolean iscrivi(Studente studente, Corso corso) {
+		String sql = "INSERT IGNORE INTO `iscritticorsi`.`iscrizione` (`matricola`, `codins`) VALUES(?,?)";
+		boolean returnValue =false;
+		try {
+			Connection conn= ConnectDB.getConnection();
+			PreparedStatement ps = conn.prepareStatement(sql);
+			
+			ps.setInt(1,studente.getMatricola());
+			ps.setString(2, corso.getCodins());
+			
+			int rs = ps.executeUpdate();
+			
+			if(rs==1) {
+				returnValue = true;
+			}
+			conn.close();
+			
+		} catch(SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		}
+		
+		return returnValue;
 	}
 
 }
